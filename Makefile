@@ -28,7 +28,7 @@ all: $(BUILD_PATH) $(EXE)
 
 
 run: all
-	@./go $(INPUT) $(OUTPUT)
+	@./$(EXE) $(INPUT) $(OUTPUT)
 
 clean:
 	@echo "Removing objects"
