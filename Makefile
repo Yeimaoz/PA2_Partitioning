@@ -1,5 +1,5 @@
 # Compiler
-CXX = g++
+CXX = g++93
 
 # Path
 SRC_PATH = src
@@ -9,15 +9,15 @@ BUILD_PATH = build
 EXE = partitioner
 
 # Source 
-SOURCES = $(SRC_PATH)/main.cpp 
-OBJECTS = $(BUILD_PATH)/main.o
+SOURCES = $(SRC_PATH)/main.cpp $(SRC_PATH)/partitioner.cpp $(SRC_PATH)/block.cpp $(SRC_PATH)/net.cpp 
+OBJECTS = $(BUILD_PATH)/main.o $(BUILD_PATH)/partitioner.o $(BUILD_PATH)/block.o $(BUILD_PATH)/net.o
 
 # Compiler flags
-CXXFLAG = -O3 -Wall
+CXXFLAG = -O3 -Wall -std=c++11
 INCLUDE = -I$(SRC_PATH) 
 
-INPUT=cases/case1
-OUTPUT=resuls/case1.out
+INPUT=cases/case0
+OUTPUT=resuls/case0.out
 
 # Make-command list
 .PHONY: all run clean
