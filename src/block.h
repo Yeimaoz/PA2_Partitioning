@@ -13,6 +13,7 @@ class Block{
         string name;
         int belongs2;
         int cost;
+        bool moved = false;
         vector<Net*> nets;
         vector<vector<Block*>> fanouts;
 
