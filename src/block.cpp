@@ -22,5 +22,5 @@ Block::Block(const Block& in){
 }
 
 void Block::add_net(Net* net){
-    this->nets.insert(net);
+    this->nets.push_back(net);
 }

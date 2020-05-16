@@ -2,7 +2,7 @@
 #define BLOCK_H
 #include <iostream>
 #include <string>
-#include <set>
+#include <vector>
 #include "net.h"
 using namespace std;
 
@@ -12,7 +12,7 @@ class Block{
     public:
         string name;
         int belongs2;
-        set<Net*> nets;
+        vector<Net*> nets;
 
         Block();
         Block(string);
