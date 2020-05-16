@@ -18,10 +18,13 @@ class Partitioner{
         Partitioner();
         // file io
         void read_file(string);
-        void partition();
+        void initialize();
+        void FM_algorithm();
 
         // information
         void print();
+        void print_blocks();
+        void print_nets();
         void print_gain_bucket();
         void print_results();
 
@@ -39,16 +42,17 @@ class Partitioner{
         bool eon(string);
         Net* parse_net(string);
 
-        // partition
+        // initialization
         void construct_initial_solution();
-        void find_fanouts();
-
-        // supported structures
-        void evaluate_p_value();
         void construct_gain_bucket();
-
-        // cost function
+        void find_fanouts();
         void evaluate_cut_size();
         void evaluate_block_cost();
+        void evaluate_p_value();
+
+        // FM algorithm
+        Block* get_candidate();
+        vector<vector<Block*>> get_distribution(vector<Block*>&);
+        void move(Block*);
 };
 #endif

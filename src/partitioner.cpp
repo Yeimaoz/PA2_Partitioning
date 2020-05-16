@@ -63,17 +63,17 @@ Net* Partitioner::parse_net(string line){
     return net;
 }
 
-void Partitioner::partition(){
+void Partitioner::initialize(){
     construct_initial_solution();
     evaluate_cut_size();
     evaluate_block_cost();
     construct_gain_bucket();
-    print_results();
 }
 
 void Partitioner::construct_initial_solution(){
     srand(time(NULL));
     for (auto& b : this->blocks){
+        // b.second->belongs2 = (b.first[1]-48) % 2;
         b.second->belongs2 = rand() % 2;
         this->cuts[b.second->belongs2].insert(b.second);
     }
@@ -92,6 +92,13 @@ void Partitioner::find_fanouts(){
     } 
 }
 
+void Partitioner::FM_algorithm(){
+    Block* candidate = get_candidate();
+    if (candidate){
+        move(candidate);
+    }
+}
+
 void Partitioner::evaluate_p_value(){
     int p_value = -1;
     for(auto& block : this->blocks)
@@ -102,7 +109,8 @@ void Partitioner::evaluate_p_value(){
 void Partitioner::construct_gain_bucket(){
     this->gain_bucket = vector<set<Block*>>(this->p_value*2+1, set<Block*>());
     for(auto& block : this->blocks){
-        this->gain_bucket[block.second->cost+this->p_value].insert(block.second);
+        if (!block.second->moved)
+            this->gain_bucket[block.second->cost+this->p_value].insert(block.second);
     }
 }
 
@@ -126,14 +134,76 @@ void Partitioner::evaluate_block_cost(){
         block.second->update();
 }
 
-void Partitioner::print(){
+Block* Partitioner::get_candidate(){
+    for(int i = this->gain_bucket.size()-1; i > this->p_value; --i)
+        for(auto block : this->gain_bucket[i])
+            return block;
+    return NULL;
+}
+
+vector<vector<Block*>> Partitioner::get_distribution(vector<Block*>& blocks){
+    vector<vector<Block*>> distribution(2, vector<Block*>());
+    for(auto block : blocks)
+        distribution[block->belongs2].push_back(block);
+    return distribution;
+}
+
+void Partitioner::move(Block* candidate){
+    //print_blocks();
+    print_gain_bucket();
+    cout << this->cut_size << endl;
+    candidate->moved = true;
+    cout << *candidate << " " << candidate->moved <<endl;
+    int move2 = !candidate->belongs2;
+    for(int i = 0; i < candidate->nets.size(); ++i){
+        auto distribution = get_distribution(candidate->fanouts[i]);
+        // cout << *candidate->nets[i] << endl;
+        // cout << distribution[0].size() << " " << distribution[1].size() << endl;
+        // line 6
+        if (distribution[move2].empty()){
+            for(auto block : candidate->nets[i]->blocks)
+                if (!block->moved)
+                    block->cost++;
+        } else if (distribution[move2].size() == 1){
+            for(auto block : distribution[move2])
+                if (!block->moved)
+                    block->cost--;   
+        }
+        // line 8
+        if (distribution[candidate->belongs2].empty()){
+            for(auto block : candidate->nets[i]->blocks)
+                if (!block->moved)
+                    block->cost--;   
+        } else if (distribution[candidate->belongs2].size() == 1){
+            for(auto block : distribution[candidate->belongs2])
+                if (!block->moved)
+                    block->cost++;   
+        }
+    }
+    construct_gain_bucket();
+    candidate->belongs2 = move2;
+    evaluate_cut_size();
+    cout << this->cut_size << endl;
+    print_gain_bucket();
+    // print_blocks();
+}
+
+void Partitioner::print_blocks(){
     cout << "#Block: " << this->blocks.size() << endl;
     for (auto block : this->blocks)
-        cout << " -> " << *(block.second) << endl;
+        cout << " -> " << *(block.second) << " ( " << block.second->cost << " )"<< endl;
+}
+
+void Partitioner::print_nets(){
     cout << "#Net: " << this->nets.size() << endl;
     for (auto nets : this->nets)
         cout << " -> " << *(nets.second) << endl;
     cout << endl;
+}
+
+void Partitioner::print(){
+    print_blocks();
+    print_nets();
 }
 
 void Partitioner::print_gain_bucket(){
