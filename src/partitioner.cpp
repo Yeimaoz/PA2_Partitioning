@@ -67,6 +67,7 @@ void Partitioner::partition(){
     construct_initial_solution();
     evaluate_cut_size();
     evaluate_block_cost();
+    construct_gain_bucket();
     print_results();
 }
 
@@ -96,7 +97,13 @@ void Partitioner::evaluate_p_value(){
     for(auto& block : this->blocks)
         p_value = (int(block.second->nets.size()) > p_value ? block.second->nets.size() : p_value);
     this->p_value = p_value;
+}
+
+void Partitioner::construct_gain_bucket(){
     this->gain_bucket = vector<set<Block*>>(this->p_value*2+1, set<Block*>());
+    for(auto& block : this->blocks){
+        this->gain_bucket[block.second->cost+this->p_value].insert(block.second);
+    }
 }
 
 void Partitioner::evaluate_cut_size(){
@@ -120,7 +127,6 @@ void Partitioner::evaluate_block_cost(){
 }
 
 void Partitioner::print(){
-    cout << "#P: " << this->p_value << endl;
     cout << "#Block: " << this->blocks.size() << endl;
     for (auto block : this->blocks)
         cout << " -> " << *(block.second) << endl;
@@ -128,6 +134,16 @@ void Partitioner::print(){
     for (auto nets : this->nets)
         cout << " -> " << *(nets.second) << endl;
     cout << endl;
+}
+
+void Partitioner::print_gain_bucket(){
+    cout << "#Bucket: p = " << this->p_value << endl;
+    for(int i = this->gain_bucket.size()-1; i >= 0 ; --i){
+        cout << " -> Bucket[" << i-this->p_value << "]: ";
+        for(auto block : this->gain_bucket[i])
+            cout << block->name << " ";
+        cout << endl;
+    }
 }
 
 void Partitioner::print_results(){

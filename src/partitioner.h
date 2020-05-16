@@ -20,6 +20,11 @@ class Partitioner{
         void read_file(string);
         void partition();
 
+        // information
+        void print();
+        void print_gain_bucket();
+        void print_results();
+
     private:
         int group_size = 2;
         int cut_size = 1e9;
@@ -38,13 +43,12 @@ class Partitioner{
         void construct_initial_solution();
         void find_fanouts();
 
-        // cost function
+        // supported structures
         void evaluate_p_value();
+        void construct_gain_bucket();
+
+        // cost function
         void evaluate_cut_size();
         void evaluate_block_cost();
-
-        // information
-        void print();
-        void print_results();
 };
 #endif
