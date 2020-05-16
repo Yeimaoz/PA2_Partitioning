@@ -9,7 +9,8 @@ using namespace std;
 class Block{
     public:
         string name;
-        
+        int belongs2;
+
         Block();
         Block(string);
         Block(const Block&);
