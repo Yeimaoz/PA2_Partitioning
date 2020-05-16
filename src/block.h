@@ -13,6 +13,7 @@ class Block{
         string name;
         int belongs2;
         vector<Net*> nets;
+        vector<vector<Block*>> fanouts;
 
         Block();
         Block(string);

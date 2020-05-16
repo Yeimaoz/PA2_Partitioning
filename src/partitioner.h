@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include <ctime>
+#include <algorithm>
 #include "net.h"
 #include "block.h"
 using namespace std;
@@ -33,6 +34,7 @@ class Partitioner{
 
         // partition
         void construct_initial_solution();
+        void find_fanouts();
 
         // cost function
         void evaluate_cut_size();

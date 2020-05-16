@@ -19,6 +19,7 @@ void Partitioner::read_file(string filename){
         this->nets[net->name] = net;
         buffer = "";
     }
+    find_fanouts();
 }
 
 bool Partitioner::eon(string line){
@@ -64,6 +65,7 @@ Net* Partitioner::parse_net(string line){
 void Partitioner::partition(){
     construct_initial_solution();
     evaluate_cut_size();
+    evaluate_block_cost();
     print_results();
 }
 
@@ -73,6 +75,19 @@ void Partitioner::construct_initial_solution(){
         b.second->belongs2 = rand() % 2;
         this->cuts[b.second->belongs2].insert(b.second);
     }
+}
+
+void Partitioner::find_fanouts(){
+    for(auto& block : this->blocks){
+        for(auto net : block.second->nets){
+            vector<Block*> fanouts;
+            for(auto bk : net->blocks){
+                if (bk != block.second)
+                    fanouts.push_back(bk);
+            }
+            block.second->fanouts.push_back(fanouts);
+        }
+    } 
 }
 
 void Partitioner::evaluate_cut_size(){
@@ -88,6 +103,10 @@ void Partitioner::evaluate_cut_size(){
         }
     }
     this->cut_size = cut_size;
+}
+
+
+void Partitioner::evaluate_block_cost(){
 }
 
 void Partitioner::print(){
