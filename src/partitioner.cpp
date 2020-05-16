@@ -9,7 +9,7 @@ void Partitioner::read_file(string filename){
     fstream infile(filename, ios::in);
     string buffer;
     string line;
-
+    
     while (getline(infile, line)){
         if (!eon(line)){
             buffer += " " + line; 
@@ -20,6 +20,7 @@ void Partitioner::read_file(string filename){
         buffer = "";
     }
     find_fanouts();
+    evaluate_p_value();
 }
 
 bool Partitioner::eon(string line){
@@ -90,6 +91,14 @@ void Partitioner::find_fanouts(){
     } 
 }
 
+void Partitioner::evaluate_p_value(){
+    int p_value = -1;
+    for(auto& block : this->blocks)
+        p_value = (int(block.second->nets.size()) > p_value ? block.second->nets.size() : p_value);
+    this->p_value = p_value;
+    this->gain_bucket = vector<set<Block*>>(this->p_value*2+1, set<Block*>());
+}
+
 void Partitioner::evaluate_cut_size(){
     int cut_size = 0;
     for(auto& net : this->nets){
@@ -111,6 +120,7 @@ void Partitioner::evaluate_block_cost(){
 }
 
 void Partitioner::print(){
+    cout << "#P: " << this->p_value << endl;
     cout << "#Block: " << this->blocks.size() << endl;
     for (auto block : this->blocks)
         cout << " -> " << *(block.second) << endl;
