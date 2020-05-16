@@ -56,15 +56,15 @@ Net* Partitioner::parse_net(string line){
             this->blocks[block_name] = block;
         } 
         net->add_block(block);
+        block->add_net(net);
     }
     return net;
 }
 
 void Partitioner::partition(){
     construct_initial_solution();
-    print_results();
     evaluate_cut_size();
-
+    print_results();
 }
 
 void Partitioner::construct_initial_solution(){
@@ -92,8 +92,8 @@ void Partitioner::evaluate_cut_size(){
 
 void Partitioner::print(){
     cout << "#Block: " << this->blocks.size() << endl;
-    for (auto b : this->blocks)
-        cout << " -> " << b.first << endl;
+    for (auto block : this->blocks)
+        cout << " -> " << *(block.second) << endl;
     cout << "#Net: " << this->nets.size() << endl;
     for (auto nets : this->nets)
         cout << " -> " << *(nets.second) << endl;
@@ -101,6 +101,7 @@ void Partitioner::print(){
 }
 
 void Partitioner::print_results(){
+    cout << "cut_size " << this->cut_size << endl;
     for (int i = 0; i < this->group_size; ++i){
         cout << "#" << char(i+65)<< ": " << this->cuts[i].size() << endl;
         cout << " -> { ";

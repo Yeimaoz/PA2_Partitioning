@@ -36,6 +36,7 @@ class Partitioner{
 
         // cost function
         void evaluate_cut_size();
+        void evaluate_block_cost();
 
         // information
         void print();
