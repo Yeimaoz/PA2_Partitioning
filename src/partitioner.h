@@ -21,6 +21,7 @@ class Partitioner{
 
     private:
         int group_size = 2;
+        int cut_size = 1e9;
 
         map<string, Block*> blocks;
         map<string, Net*> nets;
@@ -32,6 +33,9 @@ class Partitioner{
 
         // partition
         void construct_initial_solution();
+
+        // cost function
+        void evaluate_cut_size();
 
         // information
         void print();
