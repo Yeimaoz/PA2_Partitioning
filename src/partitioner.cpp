@@ -59,3 +59,38 @@ Net* Partitioner::parse_net(string line){
     }
     return net;
 }
+
+void Partitioner::partition(){
+    construct_initial_solution();
+    
+    print_results();
+
+}
+
+void Partitioner::construct_initial_solution(){
+    srand(time(NULL));
+    for (auto b : this->blocks){
+        b.second->belongs2 = rand() % 2;
+        this->cuts[b.second->belongs2].insert(b.second);
+    }
+}
+
+void Partitioner::print(){
+    cout << "#Block: " << this->blocks.size() << endl;
+    for (auto b : this->blocks)
+        cout << " -> " << b.first << endl;
+    cout << "#Net: " << this->nets.size() << endl;
+    for (auto nets : this->nets)
+        cout << " -> " << *(nets.second) << endl;
+    cout << endl;
+}
+
+void Partitioner::print_results(){
+    for (int i = 0; i < this->group_size; ++i){
+        cout << "#" << char(i+65)<< ": " << this->cuts[i].size() << endl;
+        cout << " -> { ";
+        for (auto b : this->cuts[i])
+            cout << b->name << " ";
+        cout << "}" << endl;
+    }
+}
