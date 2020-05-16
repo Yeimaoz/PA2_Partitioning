@@ -12,6 +12,7 @@ class Block{
     public:
         string name;
         int belongs2;
+        int cost;
         vector<Net*> nets;
         vector<vector<Block*>> fanouts;
 
@@ -20,5 +21,7 @@ class Block{
         Block(const Block&);
 
         void add_net(Net*);
+        
+        void update();
 };
 #endif
