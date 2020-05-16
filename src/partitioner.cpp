@@ -105,8 +105,9 @@ void Partitioner::evaluate_cut_size(){
     this->cut_size = cut_size;
 }
 
-
 void Partitioner::evaluate_block_cost(){
+    for(auto& block : this->blocks)
+        block.second->update();
 }
 
 void Partitioner::print(){
