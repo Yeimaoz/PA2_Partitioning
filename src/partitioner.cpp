@@ -4,7 +4,7 @@ Partitioner::Partitioner(){
     cout << "Creating a partitioner ..." << endl;
 }
 
-void Partitioner::read_file(string filename){
+void Partitioner::read_file(string& filename){
     cout << "Parsing " << filename << " ..." << endl;
     fstream infile(filename, ios::in);
     string buffer;
@@ -23,7 +23,7 @@ void Partitioner::read_file(string filename){
     evaluate_p_value();
 }
 
-void Partitioner::write_file(string filename){
+void Partitioner::write_file(string& filename){
     cout << "Writing " << filename << " ..." << endl;
     fstream outfile(filename, ios::out);
     outfile << "cut_size " << this->cut_size << endl;
@@ -33,6 +33,96 @@ void Partitioner::write_file(string filename){
             outfile << block->name << endl;
     }
     outfile.close();
+}
+
+void Partitioner::read_partitioned_result(string& filename){
+    cout << "Reading given partitioned result, " << filename << " ..." << endl;
+    fstream infile(filename, ios::in);
+    string line;
+    smatch match_cut_size, match_cut, match_block;
+    regex expr_cut_size("cut_size *([0-9]+) *");
+    regex expr_cut("([A-B]) *([0-9]+) *");
+    regex expr_block(" *(c[0-9]+) *");
+    int current_cut = -1;
+    int belongs[2] = {0, 0};
+    int actual_belongs[2] = {0, 0};
+    // 0: unrecognized block
+    // 1: not eq to claim number of blocks of a cut
+    // 2: not met the ratio constraint
+    // 3: blocks unpartitioned
+    // 4: not eq to claim cut size
+    int flag = -1; 
+    while (getline(infile, line)){
+        if (line.empty())
+            continue;
+        if (regex_search(line, match_cut_size, expr_cut_size)){
+            this->claimed_cut_size = stoi(match_cut_size[1]);
+        } else if(regex_search(line, match_cut, expr_cut)){
+            current_cut = match_cut[1].str()[0]-65;
+            belongs[current_cut] = stoi(match_cut[2].str());
+        } else if(regex_search(line, match_block, expr_block)){
+            auto block_it = this->blocks.find(match_block[1]);
+            if (block_it == this->blocks.end()){
+                flag = 0;
+                break;
+            }
+            else {
+                block_it->second->belongs2 = current_cut;
+                actual_belongs[current_cut]++;
+            }
+        } else {
+            flag = 0;
+        }
+    }
+    infile.close();
+    if (flag == -1 && unpartitioned()){
+        flag = 1;
+    } else if (flag == -1 && abs(belongs[0]-belongs[1]) >= float(this->blocks.size())/5){
+        flag = 2;
+    } else if (flag == -1){
+        apply_partitioned_result();
+        evaluate_cut_size();
+        if (this->cut_size != this->claimed_cut_size)
+            flag = 3;
+    }
+    checking_report(flag);
+}
+
+void Partitioner::checking_report(int flag){
+    cout << "Checking correctness ..." << endl;
+    switch (flag){
+        case -1:
+            cout << " -> Pass, cut_size = " << this->cut_size << " ..." << endl;
+            break;
+        case 0:
+            cout << " -> Unrecognized blocks are detected ..." << endl;
+            break;
+        case 1:
+            cout << " -> Some blocks didn't be partitioned ..." << endl;
+            break;
+        case 2:
+            cout << " -> The partitioned result doesn\'t follow the given ratio constraint, \"|size(A)-size(B)| < n/5\" ..." << endl;
+            break;
+        case 3:
+            cout << " -> The claimed cut_size is wrong ..." << endl;
+        default:
+            break;
+    }
+}
+
+bool Partitioner::unpartitioned(){
+    for(auto& block : this->blocks){
+        if ( block.second->belongs2 == -1 )
+            return true;
+    }
+    return false;
+}
+
+void Partitioner::apply_partitioned_result(){
+    cout << "Applying the given partitioned result ..." << endl;
+    for(auto& block : this->blocks){
+        this->cuts[block.second->belongs2].insert(block.second);
+    }
 }
 
 bool Partitioner::eon(string line){

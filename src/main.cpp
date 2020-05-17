@@ -71,15 +71,22 @@ void generate_graph(string& output, int nodes, int edges, int constraints){
     outfile.close();
 }
 
+void check_correctness(string& input, string& dut){
+    Partitioner partitioner;
+    partitioner.read_file(input);
+    partitioner.read_partitioned_result(dut);
+}
+
 int main(int argc, char* argv[]){
     map<string, string> options = get_options(argc, argv);
     auto mode = options.find("mode");
     if (mode == options.end()){
-        cout << "Option \"-m\" is required ..." << endl;
-        cout << " -> \"-m\": should be RUN, TEST or GEN ..." << endl;
-        cout << " -> GEN: randomly generate a testcase, \"./PA2.CHECKER -m GEN\" to learn more details ..." << endl;
-        cout << " -> RUN: generate a sample solution, \"./PA2.CHECKER -m RUN\" to learn more details ..." << endl;
-        cout << " -> TEST: check the correctness of the solution you want to test, \"./PA2.CHECKER -m TEST\" to learn more details ..." << endl;
+        cout << "Descripttion: randomly generate a testcase, generate a sample solution or check the correctness of given partitioned result with following options ..." << endl;
+        cout << " -> Option \"-m\" is required ..." << endl;
+        cout << " --> \"-m\": should be GEN, RUN or TEST ..." << endl;
+        cout << " --> GEN: randomly generate a testcase, \"./PA2.CHECKER -m GEN\" to learn more details ..." << endl;
+        cout << " --> RUN: generate a sample solution, \"./PA2.CHECKER -m RUN\" to learn more details ..." << endl;
+        cout << " --> TEST: check the correctness of the solution you want to test, \"./PA2.CHECKER -m TEST\" to learn more details ..." << endl;
         cout << " -> For instance: \"./PA2.CHECKER -m TEST -i cases/case0 -d results/case0.out\" to test the correctness of results/case0.out ..." << endl;
         return -1;
     } else {
@@ -92,8 +99,8 @@ int main(int argc, char* argv[]){
                     cout << " --> \"-i\": the related path of the input file ..." << endl;
                 if (output_it == options.end())
                     cout << " --> \"-o\": the related path of the output file ..." << endl;
-                cout << " --> For instance: \"./PA2.CHECKER -m RUN -i cases/case0 -o results/case0.out\" ..." << endl;
-                cout << " ---> In this case, this program will generate a sample solution of partitioned cases/case0 ..." << endl;
+                cout << " -> For instance: \"./PA2.CHECKER -m RUN -i cases/case0 -o results/case0.out\" ..." << endl;
+                cout << " --> In this case, this program will generate a sample solution of partitioned cases/case0 ..." << endl;
                 return -1;
             }
             generate_solution(input_it->second, output_it->second);
@@ -114,18 +121,34 @@ int main(int argc, char* argv[]){
                 if (edge_it == options.end())
                     cout << " --> \"-e\": the number of hyperedges you'd like have in this graph ..." << endl;
                 if (constraint_it == options.end())
-                    cout << " --> \"-c\": the maximum number of nodes any hyperedge connects  to you'd like restrict in this graph ..." << endl;
-                cout << " --> For instance: \"./PA2.CHECKER -m GEN -o cases/case10 -n 10 -e 8 -c 3\" ..." << endl;
-                cout << " ---> In this case, this program will randomly generate a graph, cases/case10. And there are 10 nodes, 8 hyperedges" << endl;
-                cout << " ---> and the maximum number of nodes each hyperedge connects to is less and equal to 3 ..." << endl;
+                    cout << " --> \"-c\": the maximum number of nodes any hyperedge connects to you'd like restrict in this graph ..." << endl;
+                cout << " -> For instance: \"./PA2.CHECKER -m GEN -o cases/case10 -n 10 -e 8 -c 3\" ..." << endl;
+                cout << " --> In this case, this program will randomly generate a graph, cases/case10. And there are 10 nodes, 8 hyperedges" << endl;
+                cout << " --> and the maximum number of nodes each hyperedge connects to is less and equal to 3 ..." << endl;
                 return -1;
             }
             generate_graph(output_it->second, stoi(node_it->second), stoi(edge_it->second), stoi(constraint_it->second));
         }
         else if (mode->second == "TEST"){
             cout << "Descripttion: check the given partitioned result is valid for the given testcase ..." << endl;
-            auto output_it = options.find("output");
-            auto node_it = options.find("#node");
+            auto input_it = options.find("input");
+            auto dut_it = options.find("dut");
+            if (input_it == options.end() | dut_it == options.end()){
+                cout << " -> Option \"-i\" and \"-d\" are required for TEST mode ..." << endl;
+                if (input_it == options.end())
+                    cout << " --> \"-i\": the related path of the testcase you want to test ..." << endl;
+                if (dut_it == options.end())
+                    cout << " --> \"-d\": the partitioned result corresponding to the given testcase ..." << endl;
+                cout << " -> For instance: \"./PA2.CHECKER -m TEST -i cases/case0 -d results/case0.out\" ..." << endl;
+                cout << " --> In this case, this program will check the correctness of the relationship between given testcase and partitioned result under test. " << endl;
+                cout << " --> It will give you \"Pass, cut_size = x\", if the given partitioned result is valid ..." << endl;
+                cout << " --> It will give you \"Unrecognized blocks are detected\", if there are some unrecognized block in the given partitioned result ..." << endl;
+                cout << " --> It will give you \"Some blocks didn't be partitioned\", ..." << endl;
+                cout << " --> It will give you \"The partitioned result doesn\'t follow the given ratio constraint, if |size(A)-size(B)| > n/5\", ..." << endl;
+                cout << " --> It will give you \"The claimed cut_size is wrong\", if the claimed cut size is not equal to the actual cut size of given partitioned result ..." << endl;
+                return -1;
+            }
+            check_correctness(input_it->second, dut_it->second);
         }
     }
     return 0;

@@ -17,8 +17,9 @@ class Partitioner{
     public:
         Partitioner();
         // file io
-        void read_file(string);
-        void write_file(string);
+        void read_file(string&);
+        void read_partitioned_result(string&);
+        void write_file(string&);
 
         // partition
         void initialize();
@@ -35,6 +36,7 @@ class Partitioner{
         int group_size = 2;
         int cut_size = 1e9;
         int p_value;
+        int claimed_cut_size = 1e9;
 
         map<string, Block*> blocks;
         map<string, Net*> nets;
@@ -58,5 +60,10 @@ class Partitioner{
         vector<vector<Block*>> get_distribution(vector<Block*>&);
         void move(Block*);
         void update_gain_bucket(set<Block*>&);
+
+        // check
+        void apply_partitioned_result();
+        bool unpartitioned();
+        void checking_report(int);
 };
 #endif
