@@ -9,7 +9,6 @@ void Partitioner::read_file(string filename){
     fstream infile(filename, ios::in);
     string buffer;
     string line;
-    
     while (getline(infile, line)){
         if (!eon(line)){
             buffer += " " + line; 
@@ -19,8 +18,22 @@ void Partitioner::read_file(string filename){
         this->nets[net->name] = net;
         buffer = "";
     }
+    infile.close();
     find_fanouts();
     evaluate_p_value();
+}
+
+void Partitioner::write_file(string filename){
+    cout << "Writing " << filename << " ..." << endl;
+    fstream outfile(filename, ios::out);
+    outfile << "cut_size " << this->cut_size << endl;
+    for(int i = 0; i < 2; ++i){
+        outfile << char(i+65) << " " << this->cuts[i].size() << endl;
+        for(auto block : this->cuts[i])
+            outfile << block->name << endl;
+    }
+    outfile.close();
+    print_results();
 }
 
 bool Partitioner::eon(string line){
@@ -93,10 +106,22 @@ void Partitioner::find_fanouts(){
 }
 
 void Partitioner::FM_algorithm(){
-    Block* candidate = get_candidate();
-    if (candidate){
-        move(candidate);
+    cout << "Running FM algorithm ..." << endl;
+    while (1){
+        Block* candidate = get_candidate();
+        if (!candidate)
+            break;
+        while (candidate){
+            // cout << *candidate << endl;
+            this->cuts[candidate->belongs2].erase(candidate);
+            move(candidate);
+            this->cuts[candidate->belongs2].insert(candidate);
+            candidate = get_candidate();
+        }
+        for(auto& block : this->blocks)
+            block.second->moved = false;
     }
+    evaluate_cut_size();
 }
 
 void Partitioner::evaluate_p_value(){
@@ -135,9 +160,17 @@ void Partitioner::evaluate_block_cost(){
 }
 
 Block* Partitioner::get_candidate(){
-    for(int i = this->gain_bucket.size()-1; i > this->p_value; --i)
-        for(auto block : this->gain_bucket[i])
-            return block;
+    for(int i = this->gain_bucket.size()-1; i >= this->p_value; --i)
+        for(auto block : this->gain_bucket[i]){
+            int size[2] = {int(this->cuts[0].size()), int(this->cuts[1].size())};
+            int diff1 = abs(size[0]-size[1]);
+            size[block->belongs2]-=1;
+            size[!block->belongs2]+=1;
+            int diff2 = abs(size[0]-size[1]);
+            bool under_ratio = (diff2 < diff1) | (diff2 <= float(this->blocks.size())/5);
+            if (!block->moved && under_ratio)
+                return block;
+            }
     return NULL;
 }
 
@@ -149,43 +182,56 @@ vector<vector<Block*>> Partitioner::get_distribution(vector<Block*>& blocks){
 }
 
 void Partitioner::move(Block* candidate){
-    //print_blocks();
-    print_gain_bucket();
-    cout << this->cut_size << endl;
     candidate->moved = true;
-    cout << *candidate << " " << candidate->moved <<endl;
     int move2 = !candidate->belongs2;
+    set<Block*> updated;
     for(int i = 0; i < candidate->nets.size(); ++i){
         auto distribution = get_distribution(candidate->fanouts[i]);
-        // cout << *candidate->nets[i] << endl;
-        // cout << distribution[0].size() << " " << distribution[1].size() << endl;
         // line 6
         if (distribution[move2].empty()){
             for(auto block : candidate->nets[i]->blocks)
-                if (!block->moved)
+                if (!block->moved){
                     block->cost++;
+                    updated.insert(block);
+                }
         } else if (distribution[move2].size() == 1){
             for(auto block : distribution[move2])
-                if (!block->moved)
-                    block->cost--;   
+                if (!block->moved){
+                    block->cost--; 
+                    updated.insert(block);
+                }  
         }
         // line 8
         if (distribution[candidate->belongs2].empty()){
             for(auto block : candidate->nets[i]->blocks)
-                if (!block->moved)
-                    block->cost--;   
+                if (!block->moved){
+                    block->cost--; 
+                    updated.insert(block);
+                }  
         } else if (distribution[candidate->belongs2].size() == 1){
             for(auto block : distribution[candidate->belongs2])
-                if (!block->moved)
-                    block->cost++;   
+                if (!block->moved){
+                    block->cost++; 
+                    updated.insert(block);
+                }  
         }
     }
-    construct_gain_bucket();
     candidate->belongs2 = move2;
-    evaluate_cut_size();
-    cout << this->cut_size << endl;
-    print_gain_bucket();
-    // print_blocks();
+    this->gain_bucket[candidate->cost+this->p_value].erase(candidate);
+    candidate->update();
+    update_gain_bucket(updated);
+}
+
+void Partitioner::update_gain_bucket(set<Block*>& updated){
+    for(auto block : updated){
+        for(auto& blocks : this->gain_bucket){
+            if (blocks.find(block) != blocks.end()){
+                blocks.erase(block);
+                break;
+            }
+        }
+        this->gain_bucket[block->cost+this->p_value].insert(block);
+    }
 }
 
 void Partitioner::print_blocks(){

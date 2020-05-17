@@ -18,6 +18,9 @@ class Partitioner{
         Partitioner();
         // file io
         void read_file(string);
+        void write_file(string);
+
+        // partition
         void initialize();
         void FM_algorithm();
 
@@ -54,5 +57,6 @@ class Partitioner{
         Block* get_candidate();
         vector<vector<Block*>> get_distribution(vector<Block*>&);
         void move(Block*);
+        void update_gain_bucket(set<Block*>&);
 };
 #endif
