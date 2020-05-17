@@ -20,7 +20,7 @@ INPUT=cases/case0
 OUTPUT=results/case0.out
 
 # Make-command list
-.PHONY: all run clean
+.PHONY: all run clean gen
 
 # Target: Dependencies
 # 	Shell-command
@@ -29,6 +29,9 @@ all: $(BUILD_PATH) $(EXE)
 
 run: all
 	@./$(EXE) -m RUN -i $(INPUT) -o $(OUTPUT)
+
+gen: all
+	@./$(EXE) -m GEN
 
 clean:
 	@echo "Removing objects"
