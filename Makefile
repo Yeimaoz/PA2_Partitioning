@@ -17,7 +17,7 @@ CXXFLAG = -O3 -Wall -std=c++11
 INCLUDE = -I$(SRC_PATH) 
 
 INPUT=cases/case0
-OUTPUT=resuls/case0.out
+OUTPUT=results/case0.out
 
 # Make-command list
 .PHONY: all run clean
