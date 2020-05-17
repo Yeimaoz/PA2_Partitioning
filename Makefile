@@ -6,7 +6,7 @@ SRC_PATH = src
 BUILD_PATH = build
 
 # Executable 
-EXE = partitioner
+EXE = PA2.CHECKER
 
 # Source 
 SOURCES = $(SRC_PATH)/main.cpp $(SRC_PATH)/partitioner.cpp $(SRC_PATH)/block.cpp $(SRC_PATH)/net.cpp 
@@ -28,7 +28,7 @@ all: $(BUILD_PATH) $(EXE)
 
 
 run: all
-	@./$(EXE) $(INPUT) $(OUTPUT)
+	@./$(EXE) -m RUN -i $(INPUT) -o $(OUTPUT)
 
 clean:
 	@echo "Removing objects"
