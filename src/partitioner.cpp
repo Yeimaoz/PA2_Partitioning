@@ -33,7 +33,6 @@ void Partitioner::write_file(string filename){
             outfile << block->name << endl;
     }
     outfile.close();
-    print_results();
 }
 
 bool Partitioner::eon(string line){
@@ -77,6 +76,7 @@ Net* Partitioner::parse_net(string line){
 }
 
 void Partitioner::initialize(){
+    cout << "Initializing ..." << endl;
     construct_initial_solution();
     evaluate_cut_size();
     evaluate_block_cost();
